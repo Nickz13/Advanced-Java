@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.SampleController">
+   <top>
+      <HBox fx:id="hbox" prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
+   </top>
+   <center>
+      <HBox prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+         <children>
+            <Label text="Student ID">
+               <padding>
+                  <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+               </padding></Label>
+            <TextField fx:id="stid" prefHeight="25.0" prefWidth="48.0">
+               <HBox.margin>
+                  <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+               </HBox.margin></TextField>
+            <Button mnemonicParsing="false" onAction="#addID" text="Add">
+               <HBox.margin>
+                  <Insets bottom="4.0" left="4.0" right="4.0" top="4.0" />
+               </HBox.margin></Button>
+            <Button fx:id="swap" mnemonicParsing="false" onAction="#swap" prefHeight="25.0" prefWidth="56.0" text="Swap">
+               <HBox.margin>
+                  <Insets bottom="4.0" left="20.0" right="4.0" top="4.0" />
+               </HBox.margin></Button>
+            <Button fx:id="rem" mnemonicParsing="false" onAction="#removeID" text="Remove">
+               <HBox.margin>
+                  <Insets bottom="4.0" left="20.0" right="4.0" top="4.0" />
+               </HBox.margin>
+            </Button>
+            <Button fx:id="undo" layoutX="277.0" layoutY="14.0" mnemonicParsing="false" onAction="#undo" text="Undo">
+               <HBox.margin>
+                  <Insets bottom="4.0" left="20.0" right="4.0" top="4.0" />
+               </HBox.margin>
+            </Button>
+         </children>
+      </HBox>
+   </center>
+   <bottom>
+      <HBox prefHeight="300.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+         <children>
+            <BarChart fx:id="bc3" title="\%Getting 1st and 2nd Preference">
+              <xAxis>
+                <CategoryAxis side="BOTTOM" fx:id="xaxis3" />
+              </xAxis>
+              <yAxis>
+                <NumberAxis fx:id="yaxis3" side="LEFT" />
+              </yAxis>
+            </BarChart>
+            <BarChart fx:id="bc1" title="Average Competency Level">
+              <xAxis>
+                <CategoryAxis side="BOTTOM" fx:id="xaxis1" />
+              </xAxis>
+              <yAxis>
+                <NumberAxis fx:id="yaxis1" side="LEFT" />
+              </yAxis>
+            </BarChart>
+            <BarChart fx:id="bc2" title="Skills Gap">
+              <xAxis>
+                <CategoryAxis side="BOTTOM" fx:id="xaxis2" />
+              </xAxis>
+              <yAxis>
+                <NumberAxis fx:id="yaxis2" side="LEFT" />
+              </yAxis>
+            </BarChart>
+         </children>
+      </HBox>
+   </bottom>
+</BorderPane>
