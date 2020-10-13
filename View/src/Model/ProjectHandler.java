@@ -9,12 +9,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -23,10 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Scanner;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import application.*;
 import db.*;
 
@@ -48,11 +41,8 @@ public class ProjectHandler implements Serializable {
 	private Team team_edit;
 	private Team team_delete;
 	private static DecimalFormat df = new DecimalFormat("0.00");
-	CareTaker careTaker;
-	Originator originator;
-	private static int counter = 1;
-	
-	public ProjectHandler() throws IOException, ClassNotFoundException {
+
+	public ProjectHandler() throws ClassNotFoundException, IOException {
 		// TODO Auto-generated constructor stub
 		readCompanyFile();
 		readOwnersFile();
@@ -61,14 +51,23 @@ public class ProjectHandler implements Serializable {
 		readStudInfo();
 		readStudPref();
 		readteams();
-		careTaker = new CareTaker();
-        originator = new Originator(this.teams, careTaker);
+	}
+	
+	public ProjectHandler(String test) throws ClassNotFoundException, IOException {
+		// TODO Auto-generated constructor stub
+		System.out.println("For "+test+" Testing purposes");
+		readCompanyFile();
+		readOwnersFile();
+		readStudentsFile();
+		readProjectFile();
+		readStudInfo();
+		readStudPref();
 	}
 
 	public void setController(SampleController control) {
-		System.out.println(teams);
 		this.control = control;
 	}
+
 	// Adds companies info to the file and hashmap
 	public void addCompany(String id, Company c) throws IOException {
 		companies.put(id, c);
@@ -217,11 +216,11 @@ public class ProjectHandler implements Serializable {
 	public Map<String, Project> getProj() {
 		return proj;
 	}
-	
+
 	public Map<String, StudentInfo> getStudInfo() {
 		return studInfo;
 	}
-	
+
 	public ArrayList<String> getPref(String sid) {
 		String words[] = studPref.get(sid).split(" ");
 		ArrayList<String> pref = new ArrayList<String>();
@@ -232,7 +231,7 @@ public class ProjectHandler implements Serializable {
 	}
 
 	public HashMap<String, Double> percentage() {
-		
+
 		HashMap<String, Double> percen = new HashMap<String, Double>();
 		for (Map.Entry mapElement : teams.entrySet()) {
 			double success = 0;
@@ -242,15 +241,13 @@ public class ProjectHandler implements Serializable {
 			String[] value = ((Team) mapElement.getValue()).getStudentIDs().split(" ");
 			for (String students : value) {
 				ArrayList<String> pref = getPref(students);
-				//System.out.println(students + "prefe" + pref.toString());
 				if (pref.contains(key))
 					success += 1;
 				else
 					fail += 1;
 			}
-			//System.out.println("succ"+success);
 			ratio = (success) / 4;
-			percen.put(key, ratio*100);
+			percen.put(key, ratio * 100);
 		}
 		return percen;
 	}
@@ -259,11 +256,11 @@ public class ProjectHandler implements Serializable {
 		double sum = 0, stdDeviation = 0;
 		Map<String, Double> percen = percentage();
 		for (Map.Entry mapElement : percen.entrySet()) {
-			sum = sum + (Double)mapElement.getValue()/100;
+			sum = sum + (Double) mapElement.getValue() / 100;
 		}
 		double mean = sum / percen.size();
 		for (Map.Entry mapElement : percen.entrySet()) {
-			stdDeviation += Math.pow((Double)mapElement.getValue()/100 - mean, 2);
+			stdDeviation += Math.pow((Double) mapElement.getValue() / 100 - mean, 2);
 		}
 		double dev = Math.sqrt(stdDeviation / percen.size());
 		return df.format(dev);
@@ -280,7 +277,7 @@ public class ProjectHandler implements Serializable {
 		}
 		return df.format(Math.sqrt(stdDev / skill_Short.size()));
 	}
-	
+
 	public String competencyDeviation() {
 		double sum = 0, stdDev = 0;
 		for (Double num : getAv_comp_level().values()) {
@@ -323,7 +320,7 @@ public class ProjectHandler implements Serializable {
 	public void shortlistProjects() throws IOException {
 		try {
 			shortlistedProjects = sortByValue(projRatings);
-			
+
 			FileWriter file = new FileWriter(new File("projects.txt"));
 			for (Map.Entry mapElement : shortlistedProjects.entrySet()) {
 				Project value = (Project) proj.get(mapElement.getKey());
@@ -337,6 +334,17 @@ public class ProjectHandler implements Serializable {
 		} catch (Exception e) {
 			throw e;
 		}
+	}
+	
+	public void jUnitformTeam(Team team) throws IOException, NotValidIDException, InvalidMemberException,
+			StudentConflictException, RepeatedMemberException, NoLeaderException, PersonalityImbalanceException {
+		checkTeamProjID(team.getProjectID());
+		studentTeams(team.getStudentIDs());
+		checkDuplicates(team);
+		checkConflict(team.getStudentIDs());
+		checkLeader(team);
+		checkImbalance(team);
+		teams.put(team.getProjectID(), team);
 	}
 
 	// Forming teams
@@ -369,7 +377,7 @@ public class ProjectHandler implements Serializable {
 						StudentInfo value = (StudentInfo) mapEle.getValue();
 						String[] scores = value.getScore().split(" ");
 						for (int i = 0; i < scores.length; i++) {
-							//System.out.println(scores[i]);
+							// System.out.println(scores[i]);
 							if (scores[i].equals("P")) {
 								p = p + Integer.parseInt(scores[i + 1]);
 							} else if (scores[i].equals("A")) {
@@ -386,8 +394,8 @@ public class ProjectHandler implements Serializable {
 			System.out.println("Average skill competency of " + mapElement.getKey());
 			System.out.println(
 					p / stIDs.length + " " + a / stIDs.length + " " + n / stIDs.length + " " + w / stIDs.length);
-			System.out.println("Average Team skills"+((p+a+n+w)/16));
-			av_comp_level.put((String) mapElement.getKey(), ((p+a+n+w)/16));
+			System.out.println("Average Team skills" + ((p + a + n + w) / 16));
+			av_comp_level.put((String) mapElement.getKey(), ((p + a + n + w) / 16));
 			if (proj.get(mapElement.getKey()).getP() > p / stIDs.length) {
 				skill_shortfall = skill_shortfall + proj.get(mapElement.getKey()).getP() - (p / stIDs.length);
 			}
@@ -400,15 +408,18 @@ public class ProjectHandler implements Serializable {
 			if (proj.get(mapElement.getKey()).getW() > w / stIDs.length) {
 				skill_shortfall = skill_shortfall + proj.get(mapElement.getKey()).getW() - (w / stIDs.length);
 			}
-			skill_Short.put((String)mapElement.getKey(),skill_shortfall);
+			skill_Short.put((String) mapElement.getKey(), skill_shortfall);
 		}
 		getSkillShortfall();
-		System.out.println("Percentage of students getting their first and second preferences " + percentage().values() + "%");
-		System.out.println("\nStandard deviation preferences = "+percentageDeviation());
-		System.out.println("\nStandard deviation Skill shortfall = "+shortfallDeviation());
+		System.out.println(
+				"Percentage of students getting their first and second preferences " + percentage().values() + "%");
+		System.out.println("\nStandard deviation preferences = " + percentageDeviation());
+		System.out.println("\nStandard deviation Skill shortfall = " + shortfallDeviation());
 	}
-	
-	public void swapTeam(Map<String, String> selection) throws IOException, NotValidIDException, InvalidMemberException, StudentConflictException, RepeatedMemberException, NoLeaderException, PersonalityImbalanceException {
+
+	public void swapTeam(Map<String, String> selection)
+			throws IOException, NotValidIDException, InvalidMemberException, StudentConflictException,
+			RepeatedMemberException, NoLeaderException, PersonalityImbalanceException, ClassNotFoundException {
 		ArrayList<String> values = new ArrayList<String>();
 		ArrayList<String> keys = new ArrayList<String>();
 		for (Map.Entry mapElement : selection.entrySet()) {
@@ -421,19 +432,19 @@ public class ProjectHandler implements Serializable {
 		String[] students2 = teams.get(keys.get(1)).getStudentIDs().split(" ");
 		String team1 = "";
 		String team2 = "";
-		for(int i=0;i<students1.length;i++) {
-			if(students1[i].equals(values.get(0))) {
+		for (int i = 0; i < students1.length; i++) {
+			if (students1[i].equals(values.get(0))) {
 				students1[i] = values.get(1);
 			}
 			team1 += students1[i] + " ";
 		}
-		for(int i=0;i<students2.length;i++) {
-			if(students2[i].equals(values.get(1))) {
+		for (int i = 0; i < students2.length; i++) {
+			if (students2[i].equals(values.get(1))) {
 				students2[i] = values.get(0);
 			}
 			team2 += students2[i] + " ";
 		}
-		System.out.println("team1= "+team1+"team2= "+team2);
+		System.out.println("team1= " + team1 + "team2= " + team2);
 		teams1 = teams.remove(keys.get(0));
 		teams2 = teams.remove(keys.get(1));
 		formTeam(new Team(keys.get(0), team1));
@@ -441,94 +452,90 @@ public class ProjectHandler implements Serializable {
 		UpdateTable m = new UpdateTable();
 		m.updateTeam(teams.get(keys.get(0)));
 		m.updateTeam(teams.get(keys.get(1)));
-		originator.setTeams(teams);
-		//originator.createSavepoint("SAVE"+counter);
-		counter++;
-		if(control != null)
+		// originator.setTeams(teams);
+		// originator.createSavepoint("SAVE"+counter);
+
+		if (control != null)
 			control.update();
 	}
-	
-	public void removeID(Map<String, String> selection) throws IOException, NotValidIDException, InvalidMemberException, StudentConflictException, RepeatedMemberException, NoLeaderException, PersonalityImbalanceException {
+
+	public void removeID(Map<String, String> selection)
+			throws IOException, NotValidIDException, InvalidMemberException, StudentConflictException,
+			RepeatedMemberException, NoLeaderException, PersonalityImbalanceException, ClassNotFoundException {
 		String key = null;
 		String value = null;
 		for (Map.Entry mapElement : selection.entrySet()) {
-			key = (String)mapElement.getKey();
-			value = (String)mapElement.getValue();
+			key = (String) mapElement.getKey();
+			value = (String) mapElement.getValue();
 		}
-
 
 		String[] orig = teams.get(key).getStudentIDs().split(" ");
 		String students = "";
 		for (String st : orig) {
-			if(!st.equals(value)) {
+			if (!st.equals(value)) {
 				students += st + " ";
 			}
 		}
-		System.out.println("sds"+students);
+		System.out.println("sds" + students);
 		team_edit = teams.remove(key);
 		formTeam(new Team(key, students));
 		UpdateTable m = new UpdateTable();
 		m.updateTeam(teams.get(key));
-		if(control != null)
+		if (control != null)
 			control.update();
 	}
-	
-	public void addID(String empty, String stud) throws IOException, NotValidIDException, InvalidMemberException, StudentConflictException, RepeatedMemberException, NoLeaderException, PersonalityImbalanceException {
-		String key = "";
-		String value = "";
-//		for (Map.Entry mapElement : selection.entrySet()) {
-//			key = (String)mapElement.getKey();
-//			value = (String)mapElement.getValue();
-//		}
+
+	public void setTeams(Map<String, Team> teams) throws ClassNotFoundException, IOException {
+		this.teams = teams;
+		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("teams.dat"));
+		out.writeObject(teams);
+		out.close();
+		if (control != null)
+			control.update();
+	}
+
+	public void addID(String empty, String stud)
+			throws NotValidIDException, InvalidMemberException, StudentConflictException, RepeatedMemberException,
+			NoLeaderException, PersonalityImbalanceException, IOException {
 		String studs[] = teams.get(empty).getStudentIDs().split(" ");
 		String stu = "";
 		for (String st : studs) {
 			stu += st + " ";
 		}
-		stu += stud; 
-		System.out.println("tto"+stu);
+		stu += stud;
 		team_delete = teams.remove(empty);
 		formTeam(new Team(empty, stu));
 		UpdateTable m = new UpdateTable();
 		m.updateTeam(teams.get(empty));
-		if(control != null)
+		if (control != null)
 			control.update();
 	}
 	
-	public void undo() {
-		System.out.println("Before----"+teams.get("Pr3").getStudentIDs());
-		originator.undo();
-		this.teams = originator.getTeams();
-		System.out.println("After----"+teams.get("Pr3").getStudentIDs());
-		if(control != null) {
-			control.update();
-		}
-	}
-	
+
 	public Team getTeam_delete() {
 		return team_delete;
 	}
-	
+
 	public Team getTeam_edit() {
 		return team_edit;
 	}
-	
+
 	public Team getTeams1() {
 		return teams1;
 	}
-	
+
 	public Team getTeams2() {
 		return teams2;
 	}
-	
+
 	public void getSkillShortfall() {
 		for (Map.Entry mapElement : skill_Short.entrySet()) {
 			String key = (String) mapElement.getKey();
 			Double value = (Double) mapElement.getValue();
-			System.out.println("Skill shortfall for "+key +"is "+value);
+			System.out.println("Skill shortfall for " + key + "is " + value);
 		}
 	}
-	
+
 	public Map<String, Double> getSkill_Short() {
 		return skill_Short;
 	}
@@ -555,11 +562,11 @@ public class ProjectHandler implements Serializable {
 		allstud.removeAll(students);
 		System.out.println(allstud.toString());
 	}
-	
+
 	public Map<String, Double> getAv_comp_level() {
 		return av_comp_level;
 	}
-	
+
 	// Checking owner id by reading from the owners file and hashmap
 	public boolean checkOwner(String id) {
 
@@ -861,15 +868,14 @@ public class ProjectHandler implements Serializable {
 		System.out.println(studInfo.keySet());
 	}
 
-		public void readteams() throws FileNotFoundException, IOException, ClassNotFoundException {
-			ObjectInputStream in = new ObjectInputStream
-	                (new FileInputStream("teams.dat"));
-			teams = (Map<String, Team>) in.readObject();
-			in.close();
-			System.out.println(teams.keySet());
-		}
+	public void readteams() throws FileNotFoundException, IOException, ClassNotFoundException {
+		ObjectInputStream in = new ObjectInputStream(new FileInputStream("teams.dat"));
+		teams = (Map<String, Team>) in.readObject();
+		in.close();
+		System.out.println(teams.keySet());
+	}
 
-		public Map<String, Team> getTeams(){
-			return teams;
-		}
+	public Map<String, Team> getTeams() {
+		return teams;
+	}
 }

@@ -6,11 +6,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
-
 import Model.*;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -25,20 +21,20 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Material;
 
 public class SampleController {
 	private ProjectHandler pro;
 	private Map<String, String> selection = new HashMap<String, String>();
 	String empty = "";
-	
+	CareTaker careTaker;
+	Originator originator;
+	private static int counter; 
 	@FXML private HBox hbox;
 	@FXML private Button rem;
 	@FXML private Button swap;
@@ -75,10 +71,22 @@ public class SampleController {
 
 	@FXML
 	public void initialize() throws ClassNotFoundException, IOException {
+		careTaker = new CareTaker();
 		pro = new ProjectHandler();
+		originator = new Originator(careTaker);
+		originator.setTeams(tempHash());
+		originator.createSavePoint("Save0");
 		pro.setController(this);
 		
 		update();
+	}
+	
+	public Map<String, Team> tempHash() {
+		Map<String, Team> temp = new HashMap<String, Team>();
+		for (Map.Entry mapEle : pro.getTeams().entrySet()) {
+			temp.put((String)mapEle.getKey(), (Team)mapEle.getValue());
+		}
+		return temp;
 	}
 
 	public void updatebox(ProjectHandler proj) {
@@ -96,7 +104,6 @@ public class SampleController {
 	    int count = 0;
 		hbox.getChildren().clear();
 		for (Map.Entry mapEle : proj.getTeams().entrySet()) {
-			Team value = (Team) mapEle.getValue();
 			String key = (String) mapEle.getKey();
 			GridPane teamgrid = new GridPane();
 			Label txt = new Label();
@@ -163,7 +170,6 @@ public class SampleController {
 	}
 
 	public void update() {
-		
 		updatebox(pro);
 		pro.teamMetrics();
 		Map<String,Double> series1 = new TreeMap<String,Double>();
@@ -234,8 +240,6 @@ public class SampleController {
 	}
 
 	public void swap(ActionEvent evt) throws IOException, NotValidIDException, InvalidMemberException, StudentConflictException, RepeatedMemberException, NoLeaderException, PersonalityImbalanceException {
-		System.out.println(selection.values());
-		System.out.println(((Button)evt.getSource()).getId().equals("swap"));
 		if(selection.size() > 2 || selection.size() < 2) {
 			Alert alert = new Alert(AlertType.ERROR);
 		    alert.setTitle("Exception Dialog");
@@ -248,6 +252,9 @@ public class SampleController {
 		else {
 			try {
 				pro.swapTeam(selection);
+				counter++;
+				originator.setTeams(tempHash());
+				originator.createSavePoint("Save"+counter);
 				selection.clear();
 				//update();
 			} catch (Exception e) {
@@ -282,6 +289,9 @@ public class SampleController {
 		else {
 			try {
 				pro.removeID(selection);
+				counter++;
+				originator.setTeams(tempHash());
+				originator.createSavePoint("Save"+counter);
 				selection.clear();
 			} catch (Exception e)  {
 				// TODO: handle exception
@@ -301,7 +311,7 @@ public class SampleController {
 		}
 	}
 	
-	public void addID(ActionEvent evt) throws IOException, NotValidIDException, InvalidMemberException, StudentConflictException, RepeatedMemberException, NoLeaderException, PersonalityImbalanceException {
+	public void addID(ActionEvent evt) throws IOException, NotValidIDException, InvalidMemberException, StudentConflictException, RepeatedMemberException, NoLeaderException, PersonalityImbalanceException, ClassNotFoundException {
 		System.out.println(stid.getCharacters());
 		System.out.println("selection"+selection.size());
 		if(empty.equals("") || stid.getCharacters().toString().equals("")) {
@@ -317,19 +327,21 @@ public class SampleController {
 		else {
 			try {
 				pro.addID(empty, stid.getCharacters().toString());
+				counter++;
+				originator.setTeams(tempHash());
+				originator.createSavePoint("Save"+counter);
 				empty = "";
 				stid.setText("");
 			} catch (Exception e)  {
 				// TODO: handle exception
-//				for (Map.Entry mapEle : selection.entrySet()) {
-//					pro.getTeams().remove(mapEle.getKey());	
-//				}
-//				pro.formTeam(pro.getTeam_delete());
+				pro.getTeams().remove(pro.getTeam_delete().getProjectID());
+				pro.formTeam(pro.getTeam_delete());
+				empty = "";
+				stid.setText("");
 				e.printStackTrace();
 				Alert alert = new Alert(AlertType.ERROR);
 			    alert.setTitle("Exception Dialog");
 			    alert.setHeaderText(e.getClass().toString());
-			    //alert.setContentText("Coursework and Exam marks must be integers");
 			    alert.showAndWait();
 			    selection.clear();
 			    update();
@@ -338,7 +350,21 @@ public class SampleController {
 	}
 	
 	@FXML
-    void undo(ActionEvent event) {
-		pro.undo();
+    void undo(ActionEvent event) throws ClassNotFoundException, IOException {
+		if(counter > 0) {
+			counter--;
+			originator.undo("Save"+counter);
+			int tempCount = counter+1;
+			originator.removePrevious("Save"+tempCount);
+			pro.setTeams(originator.getTeams());
+			update();
+		}
+		else {
+			Alert alert = new Alert(AlertType.ERROR);
+		    alert.setTitle("Limit reached");
+		    alert.setHeaderText("Reached the end of the stack");
+		    alert.setContentText("Cannot do UNDO any further");
+		    alert.showAndWait();
+		}
     }
 }
