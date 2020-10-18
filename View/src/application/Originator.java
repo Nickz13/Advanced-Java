@@ -1,5 +1,6 @@
 package application;
 
+import java.util.HashMap;
 import java.util.Map;
 import Model.*;
 
@@ -27,7 +28,11 @@ public class Originator {
 	
 	private void setOriginatorState(String savepointName) {
 		Memento mem = careTaker.getMemento(savepointName);
-        this.teams = mem.getTeams();
+		Map<String, Team> temp = new HashMap<String, Team>();
+		for (Map.Entry mapEle : mem.getTeams().entrySet()) {
+			temp.put((String)mapEle.getKey(), (Team)mapEle.getValue());
+		}
+        this.teams = temp;
 		
 	}
 	

@@ -26,14 +26,6 @@ public class Main extends Application {
 	public void start(Stage primaryStage) {
 		try {
 			initializeDB();
-			select();
-//			create.createTeamTable(stmt);
-//			create.createProjectTable(stmt);
-//			create.createStudentTable(stmt);
-//			insert = new InsertTables();
-//			insert.insertTeams(connection);
-//			insert.insertProjects(connection);
-//			insert.insertStudents(connection);
 			BorderPane root = (BorderPane)FXMLLoader.load(getClass().getResource("Sample.fxml"));
 			Scene scene = new Scene(root,600,600);
 			root.prefHeightProperty().bind(scene.heightProperty());
@@ -51,6 +43,15 @@ public class Main extends Application {
 	    try {  connection = DriverManager.getConnection(url);
 	           stmt = connection.createStatement();
 	           System.out.println("Connection Established");
+				create.createTeamTable(stmt);
+				create.createProjectTable(stmt);
+				create.createStudentTable(stmt);
+				insert = new InsertTables();
+				insert.insertTeams(connection);
+				insert.insertProjects(connection);
+				insert.insertStudents(connection);
+	           //To get teams from db
+	           select();
 	    }
 	    catch (Exception ex) { ex.printStackTrace(); System.exit(0);}
 

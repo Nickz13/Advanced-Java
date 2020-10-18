@@ -24,18 +24,18 @@ import application.*;
 import db.*;
 
 public class ProjectHandler implements Serializable {
-	Map<String, Company> companies = new HashMap<String, Company>();
-	Map<String, ProjectOwner> projOwner = new HashMap<String, ProjectOwner>();
-	Map<String, Project> proj = new HashMap<String, Project>();
-	HashMap<String, Student> stud = new HashMap<String, Student>();
-	Map<String, StudentInfo> studInfo = new HashMap<String, StudentInfo>();
-	HashMap<String, String> studPref = new HashMap<String, String>();
-	HashMap<String, Integer> projRatings = new HashMap<String, Integer>();
-	HashMap<String, Integer> shortlistedProjects;
-	Map<String, Team> teams = new HashMap<String, Team>();
-	Map<String, Double> skill_Short = new HashMap<String, Double>();
-	Map<String, Double> av_comp_level = new HashMap<String, Double>();
-	SampleController control = null;
+	private Map<String, Company> companies = new HashMap<String, Company>();
+	private Map<String, ProjectOwner> projOwner = new HashMap<String, ProjectOwner>();
+	private Map<String, Project> proj = new HashMap<String, Project>();
+	private HashMap<String, Student> stud = new HashMap<String, Student>();
+	private Map<String, StudentInfo> studInfo = new HashMap<String, StudentInfo>();
+	private HashMap<String, String> studPref = new HashMap<String, String>();
+	private HashMap<String, Integer> projRatings = new HashMap<String, Integer>();
+	private HashMap<String, Integer> shortlistedProjects;
+	private Map<String, Team> teams = new HashMap<String, Team>();
+	private Map<String, Double> skill_Short = new HashMap<String, Double>();
+	private Map<String, Double> av_comp_level = new HashMap<String, Double>();
+	private SampleController control = null;
 	private Team teams1;
 	private Team teams2;
 	private Team team_edit;
@@ -54,7 +54,7 @@ public class ProjectHandler implements Serializable {
 	}
 	
 	public ProjectHandler(String test) throws ClassNotFoundException, IOException {
-		// TODO Auto-generated constructor stub
+		//A separate parameterized constructor for Junit as it is not reading teams
 		System.out.println("For "+test+" Testing purposes");
 		readCompanyFile();
 		readOwnersFile();
@@ -64,6 +64,7 @@ public class ProjectHandler implements Serializable {
 		readStudPref();
 	}
 
+	//For contolling the GUI
 	public void setController(SampleController control) {
 		this.control = control;
 	}
@@ -71,9 +72,11 @@ public class ProjectHandler implements Serializable {
 	// Adds companies info to the file and hashmap
 	public void addCompany(String id, Company c) throws IOException {
 		companies.put(id, c);
+		//This set of code serializes the object
 		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("companies.dat"));
 		out.writeObject(companies);
 		out.close();
+		//This writes to the file
 		FileWriter f = new FileWriter(new File("companies.txt"));
 		try {
 			for (Map.Entry mapElement : companies.entrySet()) {
@@ -93,9 +96,11 @@ public class ProjectHandler implements Serializable {
 	// Adds the project owner information to hashmap and file
 	public void addProjectOwner(String id, ProjectOwner p) throws IOException {
 		projOwner.put(id, p);
+		
 		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("owners.dat"));
 		out.writeObject(projOwner);
 		out.close();
+		
 		FileWriter f1 = new FileWriter(new File("owners.txt"));
 		try {
 			for (Map.Entry mapElement : projOwner.entrySet()) {
@@ -115,9 +120,11 @@ public class ProjectHandler implements Serializable {
 	// Add projects info to hashmap and file
 	public void addProject(String id, Project pro) throws IOException {
 		proj.put(id, pro);
+		
 		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("projects.dat"));
 		out.writeObject(proj);
 		out.close();
+		
 		FileWriter f1 = new FileWriter(new File("projects.txt"));
 		try {
 			for (Map.Entry mapElement : proj.entrySet()) {
@@ -149,6 +156,7 @@ public class ProjectHandler implements Serializable {
 	// Adding student info to the file
 	public boolean addStudInfoFile() throws IOException {
 		try {
+			// Checking for the balanced personalityTypes
 			if (checkpersonalityType()) {
 				ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("studentInfo.dat"));
 				out.writeObject(studInfo);
@@ -190,8 +198,6 @@ public class ProjectHandler implements Serializable {
 		}
 	}
 
-	// Checking for the balanced personalityTypes
-
 	// Reading info from file
 	public void readPref() throws Exception {
 		Scanner sc = new Scanner(new File("preferences.txt"));
@@ -230,6 +236,7 @@ public class ProjectHandler implements Serializable {
 		return pref;
 	}
 
+	//Return percentage of students getting preference in a team
 	public HashMap<String, Double> percentage() {
 
 		HashMap<String, Double> percen = new HashMap<String, Double>();
@@ -252,6 +259,7 @@ public class ProjectHandler implements Serializable {
 		return percen;
 	}
 
+	//Standard Deviation in %getting preferences
 	public String percentageDeviation() {
 		double sum = 0, stdDeviation = 0;
 		Map<String, Double> percen = percentage();
@@ -266,6 +274,7 @@ public class ProjectHandler implements Serializable {
 		return df.format(dev);
 	}
 
+	//Standard deviation for skill gaps in a team
 	public String shortfallDeviation() {
 		double sum = 0, stdDev = 0;
 		for (Double num : skill_Short.values()) {
@@ -336,6 +345,7 @@ public class ProjectHandler implements Serializable {
 		}
 	}
 	
+	//Specifically for Junit as this doesn't serialize the object
 	public void jUnitformTeam(Team team) throws IOException, NotValidIDException, InvalidMemberException,
 			StudentConflictException, RepeatedMemberException, NoLeaderException, PersonalityImbalanceException {
 		checkTeamProjID(team.getProjectID());
@@ -347,7 +357,7 @@ public class ProjectHandler implements Serializable {
 		teams.put(team.getProjectID(), team);
 	}
 
-	// Forming teams
+	// Forming teams and checking for several exceptions
 	public void formTeam(Team team) throws IOException, NotValidIDException, InvalidMemberException,
 			StudentConflictException, RepeatedMemberException, NoLeaderException, PersonalityImbalanceException {
 		checkTeamProjID(team.getProjectID());
@@ -362,6 +372,7 @@ public class ProjectHandler implements Serializable {
 		out.close();
 	}
 
+	//This method is to show the team metrics
 	public void teamMetrics() {
 
 		for (Map.Entry mapElement : teams.entrySet()) {
@@ -417,6 +428,7 @@ public class ProjectHandler implements Serializable {
 		System.out.println("\nStandard deviation Skill shortfall = " + shortfallDeviation());
 	}
 
+	//Swap functionality where first the teams in which there is updation are removed then the new updated teams are added
 	public void swapTeam(Map<String, String> selection)
 			throws IOException, NotValidIDException, InvalidMemberException, StudentConflictException,
 			RepeatedMemberException, NoLeaderException, PersonalityImbalanceException, ClassNotFoundException {
@@ -449,16 +461,16 @@ public class ProjectHandler implements Serializable {
 		teams2 = teams.remove(keys.get(1));
 		formTeam(new Team(keys.get(0), team1));
 		formTeam(new Team(keys.get(1), team2));
+		//Updating the database tables
 		UpdateTable m = new UpdateTable();
 		m.updateTeam(teams.get(keys.get(0)));
 		m.updateTeam(teams.get(keys.get(1)));
-		// originator.setTeams(teams);
-		// originator.createSavepoint("SAVE"+counter);
-
+		//Updating the GUI
 		if (control != null)
 			control.update();
 	}
 
+	//Removing the specific student id from a team
 	public void removeID(Map<String, String> selection)
 			throws IOException, NotValidIDException, InvalidMemberException, StudentConflictException,
 			RepeatedMemberException, NoLeaderException, PersonalityImbalanceException, ClassNotFoundException {
@@ -469,6 +481,7 @@ public class ProjectHandler implements Serializable {
 			value = (String) mapElement.getValue();
 		}
 
+		//Modifying the student string i.e. removing that specific student id from the team
 		String[] orig = teams.get(key).getStudentIDs().split(" ");
 		String students = "";
 		for (String st : orig) {
@@ -476,11 +489,12 @@ public class ProjectHandler implements Serializable {
 				students += st + " ";
 			}
 		}
-		System.out.println("sds" + students);
 		team_edit = teams.remove(key);
 		formTeam(new Team(key, students));
+		//Updating the db
 		UpdateTable m = new UpdateTable();
 		m.updateTeam(teams.get(key));
+		//Updating GUI
 		if (control != null)
 			control.update();
 	}
@@ -494,6 +508,7 @@ public class ProjectHandler implements Serializable {
 			control.update();
 	}
 
+	//Adding the ID to the team
 	public void addID(String empty, String stud)
 			throws NotValidIDException, InvalidMemberException, StudentConflictException, RepeatedMemberException,
 			NoLeaderException, PersonalityImbalanceException, IOException {
@@ -511,7 +526,7 @@ public class ProjectHandler implements Serializable {
 			control.update();
 	}
 	
-
+	//Several getters from now on
 	public Team getTeam_delete() {
 		return team_delete;
 	}
@@ -546,6 +561,10 @@ public class ProjectHandler implements Serializable {
 		projects.removeAll(teams.keySet());
 		System.out.println(projects.toString());
 	}
+	
+	public HashMap<String, Student> getStud() {
+		return stud;
+	}
 
 	public void getUpdatedStudents() {
 		ArrayList<String> students = new ArrayList<String>();
@@ -561,6 +580,10 @@ public class ProjectHandler implements Serializable {
 		}
 		allstud.removeAll(students);
 		System.out.println(allstud.toString());
+	}
+	
+	public HashMap<String, Integer> getShortlistedProjects() {
+		return shortlistedProjects;
 	}
 
 	public Map<String, Double> getAv_comp_level() {
@@ -585,6 +608,7 @@ public class ProjectHandler implements Serializable {
 			return false;
 	}
 
+	//Checking the uniqueness of ABN
 	public boolean checkABN(long abn) {
 		boolean flag = false;
 		for (Map.Entry mapEle : companies.entrySet()) {
@@ -599,6 +623,7 @@ public class ProjectHandler implements Serializable {
 		return stud.size();
 	}
 
+	//Checking uniqueness of ID
 	public boolean checkID(String id) {
 		if (stud.containsKey(id))
 			return true;
@@ -614,6 +639,7 @@ public class ProjectHandler implements Serializable {
 			return false;
 	}
 
+	//Checking leader present in a team or not
 	public void checkLeader(Team team) throws NoLeaderException {
 		String students[] = team.getStudentIDs().split(" ");
 		boolean flag = false;
@@ -722,6 +748,7 @@ public class ProjectHandler implements Serializable {
 
 	// All Reads
 	public void readCompanyFile() throws IOException, ClassNotFoundException {
+		//Reading from a file using streams
 //		if (new File("companies.txt").exists()) {
 //
 //			Stream<String> rows = Files.lines(Paths.get("companies.txt"));
@@ -741,6 +768,7 @@ public class ProjectHandler implements Serializable {
 	}
 
 	public void readOwnersFile() throws IOException, ClassNotFoundException {
+		//Reading from files using streams
 //		if (new File("owners.txt").exists()) {
 //
 //			Stream<String> rows = Files.lines(Paths.get("owners.txt"));

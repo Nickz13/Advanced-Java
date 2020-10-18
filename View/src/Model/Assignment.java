@@ -202,7 +202,7 @@ public class Assignment {
 					int n_stud = proj.checkStudents();
 
 					// Available students
-					System.out.println(proj.stud.keySet());
+					System.out.println(proj.getStud().keySet());
 
 					// Menu to capture student personalities
 					boolean flag1 = false;
@@ -357,7 +357,7 @@ public class Assignment {
 				try {
 					// Method which reads preferences from the file
 					proj.readPref();
-					System.out.println(proj.shortlistedProjects.entrySet());
+					System.out.println(proj.getShortlistedProjects().entrySet());
 					System.out.println("Shortlisted Projects updated to projects.txt");
 				} catch (Exception e) {
 					System.out.println("Error occured");
